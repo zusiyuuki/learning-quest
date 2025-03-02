@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { Modal } from '../ui/Modal'
-import { Button } from '../ui/Button'
+import { useRouter } from 'next/navigation'
+import { Modal } from '@/components/ui/Modal'
+import { Button } from '@/components/ui/Button'
+import { GuildJoinModal } from './GuildJoinModal'
 
 interface GuildCardProps {
   id: string
@@ -11,6 +14,7 @@ interface GuildCardProps {
   description: string
   icon: string
   memberCount: number
+  requirements?: string[]
   isJoined?: boolean
   onJoin?: () => void
 }
@@ -21,14 +25,20 @@ export const GuildCard: React.FC<GuildCardProps> = ({
   description,
   icon,
   memberCount,
+  requirements = [],
   isJoined = false,
   onJoin,
 }) => {
+  const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showJoinModal, setShowJoinModal] = useState(false)
 
   const handleJoin = () => {
-    onJoin?.()
-    setIsModalOpen(false)
+    if (onJoin) {
+      onJoin()
+    }
+    setShowJoinModal(false)
+    router.push(`/guilds/${id}`)
   }
 
   return (
@@ -64,19 +74,37 @@ export const GuildCard: React.FC<GuildCardProps> = ({
           <div className="flex justify-end space-x-4 mt-6">
             {isJoined ? (
               <Link href={`/guilds/${id}`}>
-                <Button>ギルドページへ</Button>
+                <Button onClick={() => setIsModalOpen(false)}>
+                  ギルドページへ
+                </Button>
               </Link>
             ) : (
               <>
                 <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
                   閉じる
                 </Button>
-                <Button onClick={handleJoin}>参加する</Button>
+                <Button onClick={() => {
+                  setIsModalOpen(false)
+                  setShowJoinModal(true)
+                }}>
+                  参加する
+                </Button>
               </>
             )}
           </div>
         </div>
       </Modal>
+
+      <GuildJoinModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onConfirm={handleJoin}
+        name={name}
+        description={description}
+        icon={icon}
+        memberCount={memberCount}
+        requirements={requirements}
+      />
     </>
   )
 } 
